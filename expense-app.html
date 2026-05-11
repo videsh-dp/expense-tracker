@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Event Expense Tracker</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body{
+  font-family: Inter, sans-serif;
+  background:#0b0f14;
+  color:white;
+  padding-bottom:100px;
+}
+
+:root{
+  --bg:#0b0f14;
+  --card:#141a22;
+  --border:#232c38;
+  --muted:#95a1af;
+  --income:#1ecb70;
+  --expense:#ff5f5f;
+  --accent:#7c5cff;
+}
+
+.container{
+  max-width:520px;
+  margin:auto;
+  padding:16px;
+}
+
+.header{
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:26px;
+  font-weight:800;
+}
+
+.subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.balance-card{
+  background:linear-gradient(135deg,#7c5cff,#5d7cff);
+  border-radius:24px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 15px 40px rgba(0,0,0,.35);
+}
+
+.balance-label{
+  opacity:.9;
+  font-size:13px;
+  margin-bottom:6px;
+}
+
+.balance-amount{
+  font-size:34px;
+  font-weight:800;
+}
+
+.mini-stats{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+
+.mini-card{
+  flex:1;
+  background:rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:12px;
+}
+
+.mini-title{
+  font-size:12px;
+  opacity:.8;
+  margin-bottom:5px;
+}
+
+.mini-amount{
+  font-size:18px;
+  font-weight:700;
+}
+
+.filters{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:#0b0f14;
+  padding:8px 0 16px;
+  display:flex;
+  gap:10px;
+}
+
+.filter-btn{
+  flex:1;
+  border:none;
+  background:#161d26;
+  color:var(--muted);
+  border-radius:14px;
+  padding:12px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.filter-btn.active{
+  background:var(--accent);
+  color:white;
+}
+
+.transaction-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.transaction-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.transaction-card:active{
+  transform:scale(.98);
+}
+
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+
+.left{
+  flex:1;
+}
+
+.transaction-name{
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.donor{
+  margin-top:8px;
+  font-size:12px;
+  color:#cbd5df;
+}
+
+.amount{
+  font-size:18px;
+  font-weight:800;
+}
+
+.amount.income{
+  color:var(--income);
+}
+
+.amount.expense{
+  color:var(--expense);
+}
+
+.card-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
+.small-btn{
+  flex:1;
+  border:none;
+  border-radius:12px;
+  padding:10px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.edit-btn{
+  background:#273242;
+  color:white;
+}
+
+.delete-btn{
+  background:#3a2222;
+  color:#ff8f8f;
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:50px 20px;
+}
+
+.fab{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  border:none;
+  background:linear-gradient(135deg,#7c5cff,#5d7cff);
+  color:white;
+  font-size:32px;
+  font-weight:300;
+  cursor:pointer;
+  box-shadow:0 15px 35px rgba(0,0,0,.4);
+  z-index:100;
+}
+
+.sheet{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:flex-end;
+  z-index:200;
+}
+
+.sheet-content{
+  width:100%;
+  background:#10161e;
+  border-radius:28px 28px 0 0;
+  padding:22px;
+  animation:slideUp .25s ease;
+}
+
+@keyframes slideUp{
+  from{
+    transform:translateY(100%);
+  }
+  to{
+    transform:translateY(0);
+  }
+}
+
+.sheet-title{
+  font-size:24px;
+  font-weight:800;
+  margin-bottom:18px;
+}
+
+.type-selector{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.type-btn{
+  flex:1;
+  border:none;
+  border-radius:16px;
+  padding:14px;
+  background:#1b2430;
+  color:var(--muted);
+  font-weight:700;
+  cursor:pointer;
+}
+
+.type-btn.active{
+  background:var(--accent);
+  color:white;
+}
+
+.input-group{
+  margin-bottom:14px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+
+input{
+  width:100%;
+  border:none;
+  background:#1b2430;
+  color:white;
+  padding:16px;
+  border-radius:16px;
+  font-size:15px;
+  outline:none;
+}
+
+.save-btn{
+  width:100%;
+  border:none;
+  padding:17px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#7c5cff,#5d7cff);
+  color:white;
+  font-size:15px;
+  font-weight:800;
+  margin-top:8px;
+  cursor:pointer;
+}
+
+.clear-btn{
+  width:100%;
+  margin-top:12px;
+  border:none;
+  background:#2a1b1b;
+  color:#ff8f8f;
+  padding:15px;
+  border-radius:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="title">Event Tracker</div>
+    <div class="subtitle">
+      Sponsorships & expense manager
+    </div>
+  </div>
+
+  <div class="balance-card">
+
+    <div class="balance-label">
+      Remaining Balance
+    </div>
+
+    <div class="balance-amount" id="balance">
+      ₹0
+    </div>
+
+    <div class="mini-stats">
+
+      <div class="mini-card">
+        <div class="mini-title">Income</div>
+        <div class="mini-amount" id="incomeTotal">
+          ₹0
+        </div>
+      </div>
+
+      <div class="mini-card">
+        <div class="mini-title">Expense</div>
+        <div class="mini-amount" id="expenseTotal">
+          ₹0
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="filters">
+
+    <button class="filter-btn active"
+      onclick="setFilter('all', this)">
+      All
+    </button>
+
+    <button class="filter-btn"
+      onclick="setFilter('income', this)">
+      Income
+    </button>
+
+    <button class="filter-btn"
+      onclick="setFilter('expense', this)">
+      Expense
+    </button>
+
+  </div>
+
+  <div class="transaction-list" id="transactionList"></div>
+
+</div>
+
+<button class="fab" onclick="openSheet()">
+  +
+</button>
+
+<div class="sheet" id="sheet">
+
+  <div class="sheet-content">
+
+    <div class="sheet-title">
+      Add Transaction
+    </div>
+
+    <div class="type-selector">
+
+      <button class="type-btn active"
+        id="incomeTypeBtn"
+        onclick="setType('income')">
+        Income
+      </button>
+
+      <button class="type-btn"
+        id="expenseTypeBtn"
+        onclick="setType('expense')">
+        Expense
+      </button>
+
+    </div>
+
+    <div class="input-group">
+      <label>Name</label>
+      <input type="text"
+        id="nameInput"
+        placeholder="Example: Trophy Purchase">
+    </div>
+
+    <div class="input-group">
+      <label>Amount</label>
+      <input type="number"
+        id="amountInput"
+        placeholder="Enter amount">
+    </div>
+
+    <div class="input-group">
+      <label>Donor / Sponsor Name</label>
+      <input type="text"
+        id="donorInput"
+        placeholder="Optional">
+    </div>
+
+    <button class="save-btn"
+      onclick="saveTransaction()">
+      Save Transaction
+    </button>
+
+    <button class="clear-btn"
+      onclick="clearAllData()">
+      Clear All Data
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+let transactions =
+  JSON.parse(localStorage.getItem("eventTrackerData"))
+  || [];
+
+let currentFilter = "all";
+let currentType = "income";
+let editId = null;
+
+function saveToStorage(){
+
+  localStorage.setItem(
+    "eventTrackerData",
+    JSON.stringify(transactions)
+  );
+}
+
+function openSheet(){
+
+  document.getElementById("sheet").style.display =
+    "flex";
+}
+
+function closeSheet(){
+
+  document.getElementById("sheet").style.display =
+    "none";
+
+  document.getElementById("nameInput").value = "";
+  document.getElementById("amountInput").value = "";
+  document.getElementById("donorInput").value = "";
+
+  editId = null;
+}
+
+window.onclick = function(e){
+
+  const sheet = document.getElementById("sheet");
+
+  if(e.target === sheet){
+    closeSheet();
+  }
+}
+
+function setType(type){
+
+  currentType = type;
+
+  document.getElementById("incomeTypeBtn")
+    .classList.remove("active");
+
+  document.getElementById("expenseTypeBtn")
+    .classList.remove("active");
+
+  if(type === "income"){
+    document.getElementById("incomeTypeBtn")
+      .classList.add("active");
+  }else{
+    document.getElementById("expenseTypeBtn")
+      .classList.add("active");
+  }
+}
+
+function saveTransaction(){
+
+  const name =
+    document.getElementById("nameInput")
+    .value.trim();
+
+  const amount =
+    document.getElementById("amountInput")
+    .value;
+
+  const donor =
+    document.getElementById("donorInput")
+    .value.trim();
+
+  if(!name || !amount){
+    alert("Please fill required fields");
+    return;
+  }
+
+  const item = {
+    id: editId || Date.now(),
+    name,
+    amount:Number(amount),
+    donor,
+    type:currentType,
+    date:new Date().toLocaleDateString()
+  };
+
+  if(editId){
+
+    transactions = transactions.map(t =>
+      t.id === editId ? item : t
+    );
+
+  }else{
+
+    transactions.unshift(item);
+  }
+
+  saveToStorage();
+
+  renderTransactions();
+
+  closeSheet();
+}
+
+function renderTransactions(){
+
+  const list =
+    document.getElementById("transactionList");
+
+  const filtered =
+    currentFilter === "all"
+      ? transactions
+      : transactions.filter(
+          t => t.type === currentFilter
+        );
+
+  if(filtered.length === 0){
+
+    list.innerHTML = `
+      <div class="empty">
+        No transactions yet
+      </div>
+    `;
+
+    return;
+  }
+
+  list.innerHTML = filtered.map(item => `
+
+    <div class="transaction-card">
+
+      <div class="card-top">
+
+        <div class="left">
+
+          <div class="transaction-name">
+            ${item.name}
+          </div>
+
+          <div class="meta">
+            ${item.type} • ${item.date}
+          </div>
+
+          ${
+            item.donor
+            ? `
+              <div class="donor">
+                🤝 ${item.donor}
+              </div>
+            `
+            : ""
+          }
+
+        </div>
+
+        <div class="amount ${item.type}">
+          ${item.type === "income" ? "+" : "-"}
+          ₹${item.amount}
+        </div>
+
+      </div>
+
+      <div class="card-actions">
+
+        <button class="small-btn edit-btn"
+          onclick="editTransaction(${item.id})">
+          Edit
+        </button>
+
+        <button class="small-btn delete-btn"
+          onclick="deleteTransaction(${item.id})">
+          Delete
+        </button>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+  updateSummary();
+}
+
+function updateSummary(){
+
+  const income = transactions
+    .filter(t => t.type === "income")
+    .reduce((a,b)=>a+b.amount,0);
+
+  const expense = transactions
+    .filter(t => t.type === "expense")
+    .reduce((a,b)=>a+b.amount,0);
+
+  const balance = income - expense;
+
+  document.getElementById("incomeTotal")
+    .innerText = `₹${income}`;
+
+  document.getElementById("expenseTotal")
+    .innerText = `₹${expense}`;
+
+  document.getElementById("balance")
+    .innerText = `₹${balance}`;
+}
+
+function setFilter(type, btn){
+
+  currentFilter = type;
+
+  document.querySelectorAll(".filter-btn")
+    .forEach(b => b.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  renderTransactions();
+}
+
+function deleteTransaction(id){
+
+  if(confirm("Delete this transaction?")){
+
+    transactions = transactions.filter(
+      t => t.id !== id
+    );
+
+    saveToStorage();
+
+    renderTransactions();
+  }
+}
+
+function editTransaction(id){
+
+  const item =
+    transactions.find(t => t.id === id);
+
+  editId = id;
+
+  currentType = item.type;
+
+  setType(item.type);
+
+  document.getElementById("nameInput")
+    .value = item.name;
+
+  document.getElementById("amountInput")
+    .value = item.amount;
+
+  document.getElementById("donorInput")
+    .value = item.donor || "";
+
+  openSheet();
+}
+
+function clearAllData(){
+
+  const confirmClear = confirm(
+    "Are you sure you want to clear all data?"
+  );
+
+  if(confirmClear){
+
+    transactions = [];
+
+    localStorage.removeItem(
+      "eventTrackerData"
+    );
+
+    renderTransactions();
+
+    closeSheet();
+  }
+}
+
+renderTransactions();
+
+</script>
+
+</body>
+</html>
